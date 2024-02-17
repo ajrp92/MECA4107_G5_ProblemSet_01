@@ -8,13 +8,11 @@ library("tidyverse")
 library("rvest")
 
 ##Web page""
-web <- "https://ignaciomsarmiento.github.io/GEIH2018_sample/"
-
-htlm <- read_html("web") 
+web <- read_html("https://ignaciomsarmiento.github.io/GEIH2018_sample/")
 
 ##links##
 
-links <- htlm %>% 
+links <- web %>% 
   html_nodes("a") %>%
   html_attr("href")
 
