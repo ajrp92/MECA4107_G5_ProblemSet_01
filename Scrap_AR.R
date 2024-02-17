@@ -17,4 +17,6 @@ htlm <- read_html("web")
 links <- htlm %>% 
   html_nodes("a") %>%
   html_attr("href")
- #
+
+## falta leer datos y construir base de datos ##
+## Terminar script allí ##
