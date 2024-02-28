@@ -41,17 +41,36 @@ my_url_ext <- ".html"
 
 my_urls <- paste0(my_url_base, my_url_pages, my_url_ext)  # Concatenate all elements
 
-for (i in 1:length(my_urls)) {
-  url <- my_urls[i]
+my_url_base_GH <- "https://ignaciomsarmiento.github.io/GEIH2018_sample/pages/geih_page_" 
+my_url_ext_GH <- ".html"
+
+my_urls_GH <- paste0(my_url_base_GH, my_url_pages, my_url_ext_GH)  # Concatenate all elements
+
+my_html = list()
+table_1 = list()
+table = list()
+
+for (i in 1:length(my_urls_GH)) {
+  url <- my_urls_GH[i]
   #browseURL(url)  # Print the full URL
-  my_html = read_html(url)
-  class(my_html) ## ver la clase del objeto
-  #view(my_html)
-  }
+  my_html[[i]] = read_html(url)
+  table_1[[i]] <- my_html[[i]] %>%  html_table()
+  table_1[[i]] <- as.data.frame(table_1[[i]])
+  table <- rbind(table, table_1[[i]])
+}
 
-View(my_html)
+table <- as_tibble(table)
 
-my_html %>% html_elements("h4")
+## Filter
 
+bd <- table %>% 
+  filter(table, P6040 >= 18 , ocu==1 , P6240==1) 
+
+
+bd_2 <- bd %>% 
+      group_by(P6020,P6040) %>% 
+      summarise(ingMed = mean(P6500, na.rm=T), .groups="drop") %>% 
+
+bd_2 %>%  dplyr::select(P6020,P6040, ingMed) %>% head(4)
 
 #----------------------------------------------------------------------------
