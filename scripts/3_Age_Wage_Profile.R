@@ -21,7 +21,8 @@ p_load(tidyverse,
        sandwich,
        lmtest,
        boot,
-       car)
+       car,
+       estimatr)
 
 ##Importar/ ajustar base
 
@@ -32,41 +33,38 @@ df_3 <- df_3 %>% mutate(agesqr = age^2)
 
 ##Modelo de regresión
 
-mod_3 <- lm(log_ingtot_1 ~ age + agesqr, data = df_3)
+mod_3 <- lm_robust(log_ingtot_1 ~ age + agesqr, data = df_3)
 
+##Boot function
+
+f_boot <- function(df_3, indices) {
+  sample <- df_3[indices, ]
+  age_values <- seq(min(sample$age), max(sample$age), length.out = 14091)
+  predicted_wage <- predict(mod_3, newdata = data.frame(age = age_values, agesqr = age_values^2))
+  peak_age <- age_values[which.max(predicted_wage)]
+  return(peak_age)
+}
 
 ##Boot
-bootmod_3 <- Boot(mod_3, R = 999)
-summary(bootmod_3)
-confint(bootmod_3, level = .95)
+bootmod_3 <- boot(df_3, f_boot, R = 1000)
 
-##Tabla de regresion
-stargazer(mod_3, bootmod_3, type = "text",
-          title = "Regresión Modelo 3",
-          notes = "Columna (2) muestra intervalos de confianza por Boostrap")
+ci_peak <- boot.ci(bootmod_3, type = "basic")
+
+##Tabla de regresion##No funciona
+stargazer(mod_3, type = "text",
+          se = list(ci_peak),
+          title = "Regresión Modelo 3")
 
 
 ##Grafico
-
-#secuencia
-age_seq <- seq(min(df_3$age), max(df_3$age), by = 0.1)
-
-#prediccion
-predicted_log_wage <- predict(mod_3, newdata = data.frame(age = age_seq, agesqr = age_seq^2))
-
-# Convertir log
-predicted_wage <- exp(predicted_log_wage)
-
-#Edad máxima
-peak_age <- age_seq[which.max(predicted_wage)]
+age_values <- seq(min(df_3$age), max(df_3$age), length.out = 14091)
+predicted_wage <- predict(mod_3, newdata = data.frame(age = age_values, agesqr = age_values^2))
+peak_age <- age_values[which.max(predicted_wage)]
 
 #plot
-plot(age_seq, predicted_wage, type = 'l', xlab = 'Age', ylab = 'Wage', main = 'Age-Earning Profile')
+plot(age_values, predicted_wage, type = 'l', xlab = 'Age', ylab = 'Wage', main = 'Age-Earning Profile')
 
 #intervalos
-conf_interval <- predict(model, newdata = data.frame(age = age_seq, agesqr = age_seq^2), interval = 'confidence')
-lines(age_seq, exp(conf_interval[, "lwr"]), col = "red", lty = 2)
-lines(age_seq, exp(conf_interval[, "upr"]), col = "red", lty = 2)
 
 # incluir edad máxima
 abline(v = peak_age, col = "blue", lty = 2)
